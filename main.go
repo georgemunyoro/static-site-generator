@@ -2,9 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
+	"fmt"
 	engine "go-templating-engine"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -73,7 +76,7 @@ func generateProject(projectLocation string) error {
 	var result []string
 	var renderFunctionsToCall []string
 
-	result = append(result, "package main\n\nimport (\n    \"strings\"\n    \"encoding/json\"\n    \"fmt\"\n    \"io/ioutil\"\n)\n"+strings.Join(result, ""))
+	result = append(result, "package main\n\nimport (\n    \"strings\"\n    \"encoding/json\"\n    \"reflect\"\n    \"io/ioutil\"\n)\n"+strings.Join(result, ""))
 
 	for i := 0; i < len(pages); i++ {
 		templateName := strings.Split(pages[i].Name(), ".")[1]
@@ -102,7 +105,7 @@ func generateProject(projectLocation string) error {
 
 	mainFunction := "func main() {\n"
 	for i := 0; i < len(renderFunctionsToCall); i++ {
-		mainFunction += "    ioutil.WriteFile(\"../site/" + renderFunctionsToCall[i] + ".html\", []byte(c_render_" + renderFunctionsToCall[i] + "()), 0755)\n"
+		mainFunction += "    ioutil.WriteFile(\"../site/" + renderFunctionsToCall[i] + ".html\", []byte(c_render_" + renderFunctionsToCall[i] + "()), 0644)\n"
 	}
 	mainFunction += "}"
 
@@ -118,8 +121,38 @@ func generateProject(projectLocation string) error {
 		return err
 	}
 
+	out, cErr := RunCMD("/bin/go", []string{"run", projectLocation + "/dist/bin/out.go"}, true)
+	if cErr != nil {
+		fmt.Println(out)
+		fmt.Println(cErr.Error())
+		return cErr
+	}
+
 	return nil
 }
 
+func RunCMD(path string, args []string, debug bool) (out string, err error) {
+
+	cmd := exec.Command(path, args...)
+
+	var b []byte
+	b, err = cmd.CombinedOutput()
+	out = string(b)
+
+	if debug {
+		fmt.Println(strings.Join(cmd.Args[:], " "))
+
+		if err != nil {
+			fmt.Println("RunCMD ERROR")
+			fmt.Println(out)
+		}
+	}
+
+	return
+}
+
 func main() {
+	var projectDirFlag = flag.String("p", ".", "Project directory")
+	flag.Parse()
+	generateProject(*projectDirFlag)
 }

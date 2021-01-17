@@ -1,1 +1,2 @@
-# static-site-generator
+# Carpet
+A static site generator built with Golang

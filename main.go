@@ -46,8 +46,7 @@ func extractFrontmatterData(data []byte) (map[string]interface{}, []byte) {
 }
 
 func readTemplateFile(filepath string) (*Page, error) {
-	fileData, err := ioutil.ReadFile(filepath)
-
+	fileData, err := ioutil.ReadFile(
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +131,6 @@ func generateProject(projectLocation string) error {
 }
 
 func RunCMD(path string, args []string, debug bool) (out string, err error) {
-
 	cmd := exec.Command(path, args...)
 
 	var b []byte
